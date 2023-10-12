@@ -1,21 +1,25 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
-	"os"
 	"text/template"
 )
+
 type err_values struct { 
     Code int 
     Msg string
 }
+type html_values struct { 
+    Type string 
+    Value any 
+}
 
 func main()  {
-    index, err := get_template("index.html", "index");
-    if err != nil {panic(err) }
-
-    err_html, err := get_template("error.html", "error");
+    t, err := template.ParseFiles(
+        "index.html",
+        "main.html",
+        "error.html",
+    )
     if err != nil {panic(err) }
 
     var counter int;
@@ -28,7 +32,7 @@ func main()  {
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         if r.URL.Path != "/" {
             w.WriteHeader(404)
-            err = err_html.Execute(w, err_values{404, "Not Found"})
+            err = t.Execute(w, html_values{"error", err_values{404, "Not Found"}})
             if err != nil {
                 println("ERROR: executing 'err_html'");
             }
@@ -43,28 +47,11 @@ func main()  {
             }
         }
 
-        err = index.Execute(w, str);
+        err = t.Execute(w, html_values{"[]string", str});
         if err != nil {
             println("ERROR: executing 'index'");
         }
     });
 
     http.ListenAndServe(":8080", nil);
-}
-
-
-func get_template(filename string, temp string) (*template.Template, error) { 
-    content, err := os.ReadFile(filename);
-    if err != nil { 
-        fmt.Println("Error: Opening file");
-        return nil, err
-    }
-
-    tmpl, err := template.New(temp).Parse(string(content));
-    if err != nil { 
-        fmt.Println("Error: Creating template");
-        return nil, err
-    }
-
-    return tmpl, nil 
 }
