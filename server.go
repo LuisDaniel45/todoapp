@@ -9,21 +9,20 @@ type err_values struct {
     Code int 
     Msg string
 }
-type html_values struct { 
-    Type string 
-    Value any 
-}
 
 func main()  {
     t, err := template.ParseFiles(
         "index.html",
         "main.html",
         "error.html",
-    )
+    );
     if err != nil {panic(err) }
+
 
     var counter int;
     var str []string;
+    http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+    });
 
     http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 
@@ -32,9 +31,9 @@ func main()  {
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         if r.URL.Path != "/" {
             w.WriteHeader(404)
-            err = t.Execute(w, html_values{"error", err_values{404, "Not Found"}})
+            err = t.ExecuteTemplate(w, "error.html", err_values{404, "Not Found"})
             if err != nil {
-                println("ERROR: executing 'err_html'");
+                println("ERROR: content render");
             }
             return;
         }
@@ -47,11 +46,14 @@ func main()  {
             }
         }
 
-        err = t.Execute(w, html_values{"[]string", str});
+        err = t.ExecuteTemplate(w, "main.html", str)
         if err != nil {
-            println("ERROR: executing 'index'");
+            println("ERROR: content render");
         }
     });
 
-    http.ListenAndServe(":8080", nil);
+    err = http.ListenAndServe(":8080", nil);
+    if err != nil {
+        println("ERROR: opening port");
+    }
 }

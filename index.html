@@ -1,3 +1,4 @@
+{{define "header"}}
 <!DOCTYPE html>
 
 <html lang="en">
@@ -7,11 +8,9 @@
     </head>
     <body>
         <h1>TODO app</h1>
-        {{if eq .Type  "[]string"}}
-            {{template "content" .Value}}
-        {{else}}
-            {{template "error" .Value}}
-        {{end}}
+{{end}}
+{{define "footer"}}
     </body>
 </html>
+{{end}}
 

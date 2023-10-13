@@ -1,12 +1,11 @@
-
-{{block "content" .}}
-<ul>
-    {{range $var := .}}
-        <li>{{$var}}</li>
-    {{end}}
-</ul>
-<form method='POST'>
-    <input type="text" name="todo"> 
-    <input type="submit"> 
-</form>
-{{end}}
+{{template "header"}}
+    <ul>
+        {{range $var := .}}
+            <li>{{$var}}</li>
+        {{end}}
+    </ul>
+    <form method='POST'>
+        <input type="text" name="todo"> 
+        <input type="submit"> 
+    </form>
+{{template "footer"}}
