@@ -69,6 +69,50 @@ func main()  {
     });
 
     http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+        if r.Method == "POST" {
+            r.ParseForm()
+            if r.PostForm.Has("username") || 
+               r.PostForm.Has("password") {
+                   user := r.PostForm["username"][0];
+                   password := r.PostForm["password"][0];
+                   if user == "" || password == ""  {
+                       err = t.ExecuteTemplate(w, "error.html", err_values{401, 
+                                        "Bad Request: missing username or password"})
+                       if err != nil {
+                           println("ERROR: render error.html for missing username or password");
+                           println(err);
+                       }
+                       return
+
+                   } else if p, ok := users[user]; !ok || p != password{  
+                       err = t.ExecuteTemplate(w, "error.html", err_values{401, 
+                                        "Bad Request: invalid username or password"})
+                       if err != nil {
+                           println("ERROR: render error.html for invalid username or password");
+                           println(err);
+                       }
+                       return
+                   }
+
+                   uuid, err := os.ReadFile("/proc/sys/kernel/random/uuid")
+                   if err != nil {
+                       println("ERROR: generating uuid for session_id error")
+                       t.ExecuteTemplate(w, "error.html", err_values{501, "Internal Server Error"})
+                       return
+                   }
+
+                   session_id := string(uuid[:len(uuid)-1])
+                   session_manager[session_id] = user  
+                   http.SetCookie(w, &http.Cookie{
+                       Name: "auth", 
+                       Value: session_id, 
+                   });
+
+                   http.Redirect(w, r, "/", 301)
+                   return
+            }
+        }
+
         err = t.ExecuteTemplate(w, "login.html", nil);
         if err != nil {
             println("ERROR: login render");
