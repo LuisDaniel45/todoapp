@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -22,6 +23,8 @@ func main()  {
     db_init();
     template_init();
 
+    http.HandleFunc("/logout", logout);
+    http.HandleFunc("/home", home);
     http.HandleFunc("/register", register);
     http.HandleFunc("/login", login);
     http.HandleFunc("/", root);
@@ -32,6 +35,44 @@ func main()  {
         log.Fatal(err)
     }
 }
+
+func logout(w http.ResponseWriter, r *http.Request)  {
+    log.Println("logout");
+    cookie, err := r.Cookie("auth");
+    if err != nil {
+        http.Redirect(w, r, "/home", 301);
+        if err != nil {
+            println("ERROR: render errror.html");
+            log.Println(err)
+        }
+        return
+    }
+
+    _, err = db.Exec("DELETE FROM sessions WHERE token = ?", cookie.Value);
+    if err != nil {
+        unexpected_err(w, err, 
+            "ERROR: querry user_id from token: %s", 
+            cookie.Value);
+        return
+    }
+    
+    http.SetCookie(w, &http.Cookie{
+        Name: "auth",
+        Value: "deleted",
+        Expires: time.Time{}.AddDate(1970, 01, 01),
+    })
+    http.Redirect(w, r, "/home", 301);
+    return
+}
+
+func home(w http.ResponseWriter, r *http.Request)  {
+    err := t.ExecuteTemplate(w, "home.html", nil);
+    if err != nil {
+        println("ERROR: errror.html render")
+        log.Println(err)
+    }
+}
+
 func unexpected_err(w http.ResponseWriter, err error, msg string, args...any) {
     log.Printf(msg, args)
     log.Println(err)
@@ -48,13 +89,20 @@ func register(w http.ResponseWriter, r *http.Request) {
         if r.Method == "POST" {
             r.ParseForm();
             if r.PostForm.Has("username") && 
-               r.PostForm.Has("password") {
-                   user := r.PostForm["username"][0];
+               r.PostForm.Has("password") && 
+               r.PostForm.Has("confirm"){
+                   user     := r.PostForm["username"][0];
                    password := r.PostForm["password"][0];
-                   if user == ""  || password == "" {
+                   confirm  := r.PostForm["confirm"][0];
+
+                   if user == ""  || password == "" || confirm == "" {
                        t.ExecuteTemplate(w, "error.html", err_values{400,
                                                "Bad Request, missing input"})
                        return
+                   } else if password != confirm {
+                       t.ExecuteTemplate(w, "error.html", err_values{400,
+                                               "Bad Request, password and confirm do not match"})
+                       return;
                    }
 
                    rows, err := db.Query("SELECT id FROM users WHERE username = ?", user);
@@ -158,6 +206,17 @@ func login(w http.ResponseWriter, r *http.Request)  {
 
 func root(w http.ResponseWriter, r *http.Request)  {
     if r.URL.Path != "/" {
+        if r.URL.Path == "/assets/script.js" {
+            content, err := os.ReadFile("assets/script.js")
+            if  err != nil{
+                unexpected_err(w, err, "ERROR: opening script\n")
+                return
+            }
+            w.Header().Set("Content-Type", "application/javascript")
+            w.Write(content)
+            return
+        }
+
         w.WriteHeader(404)
         err := t.ExecuteTemplate(w, "error.html", err_values{404, "Not Found"})
         if err != nil {
@@ -168,12 +227,7 @@ func root(w http.ResponseWriter, r *http.Request)  {
 
     cookie, err := r.Cookie("auth");
     if err != nil {
-        w.WriteHeader(403)
-        err = t.ExecuteTemplate(w, "error.html", err_values{403, "Forbidden Acces, Not Authorize"})
-        if err != nil {
-            println("ERROR: render errror.html");
-            log.Println(err)
-        }
+        http.Redirect(w, r, "/home", 301);
         return
     }
 
@@ -266,11 +320,12 @@ func create_session(w http.ResponseWriter,  user_id int) (string, error) {
 func template_init() {
     var err error;
     t, err = template.ParseFiles(
-        "index.html",
-        "main.html",
-        "error.html",
-        "register.html",
-        "login.html",
+        "views/index.html",
+        "views/main.html",
+        "views/error.html",
+        "views/register.html",
+        "views/login.html",
+        "views/home.html",
     );
     if err != nil {
         println("ERROR: parsing html files")

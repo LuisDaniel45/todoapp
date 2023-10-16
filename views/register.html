@@ -1,0 +1,13 @@
+{{template "header"}}
+    <a href="/home">home</a>
+    <form method='POST' id="register" onsubmit="register()">
+        <label for="usernmae">Username</label>
+        <input required autofocus placeholder="Username" type="text" name="username"> 
+        <label for="password">Password</label>
+        <input required placeholder="password" type="password" name="password" id="password">
+        <label for="confirm">Confirm Password</label>
+        <input required placeholder="Confirm" type="password" name="confirm" id="confirm"> 
+        <p id="msg"></p>
+        <input type="submit" disabled=true id="button"> 
+    </form>
+{{template "footer"}}

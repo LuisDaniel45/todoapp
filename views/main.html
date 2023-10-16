@@ -1,0 +1,14 @@
+{{template "header"}}
+    <a href="/home">home</a>
+    <a href="/logout">logout</a>
+
+    <ul>
+        {{range $var := .}}
+            <li>{{$var}}</li>
+        {{end}}
+    </ul>
+    <form method='POST'>
+        <input type="text" name="todo"> 
+        <input type="submit"> 
+    </form>
+{{template "footer"}}
