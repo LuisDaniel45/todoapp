@@ -22,6 +22,7 @@ var t *template.Template;
 func main()  {
     db_init();
     template_init();
+    assets_init();
 
     http.HandleFunc("/logout", logout);
     http.HandleFunc("/home", home);
@@ -206,17 +207,6 @@ func login(w http.ResponseWriter, r *http.Request)  {
 
 func root(w http.ResponseWriter, r *http.Request)  {
     if r.URL.Path != "/" {
-        if r.URL.Path == "/assets/script.js" {
-            content, err := os.ReadFile("assets/script.js")
-            if  err != nil{
-                unexpected_err(w, err, "ERROR: opening script\n")
-                return
-            }
-            w.Header().Set("Content-Type", "application/javascript")
-            w.Write(content)
-            return
-        }
-
         w.WriteHeader(404)
         err := t.ExecuteTemplate(w, "error.html", err_values{404, "Not Found"})
         if err != nil {
@@ -368,3 +358,43 @@ func db_init() {
         log.Fatal(err)
     }
 }
+
+func assets_init()  {
+    ret, err := os.ReadDir("assets")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, v := range(ret) { 
+        if !v.IsDir() {
+            name :=  v.Name();
+            var type_header string;
+            for i := len(name) - 1; i > 0; i-- {
+                if name[i] == '.' {
+                    switch name[i:] {
+                        case ".js":
+                            type_header = "application/javascript" 
+                            break
+
+                        case ".css":
+                            type_header = "text/css" 
+                            break
+                    }
+                    break
+                }
+            }
+
+            name = "assets/" + name;
+            content, err := os.ReadFile(name);
+            if err != nil {
+                log.Fatal(err)
+            }
+
+            http.HandleFunc("/" + name, func(w http.ResponseWriter, r *http.Request) {
+                w.Header().Set("Content-Type", type_header);
+                w.Write(content)
+            })
+        }
+    }
+}
+
