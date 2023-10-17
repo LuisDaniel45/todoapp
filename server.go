@@ -385,13 +385,15 @@ func assets_init()  {
             }
 
             name = "assets/" + name;
-            content, err := os.ReadFile(name);
-            if err != nil {
-                log.Fatal(err)
-            }
+            // TODO: change once im sure of what i want
+            // content, err := os.ReadFile(name);
+            // if err != nil {
+            //     log.Fatal(err)
+            // }
 
             http.HandleFunc("/" + name, func(w http.ResponseWriter, r *http.Request) {
                 w.Header().Set("Content-Type", type_header);
+                content, _:= os.ReadFile(name);
                 w.Write(content)
             })
         }

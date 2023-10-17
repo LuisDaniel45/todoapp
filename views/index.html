@@ -6,9 +6,16 @@
         <title>The TODO app</title>
         <meta charset="UTF-8">
         <script defer src="/assets/script.js"></script>
+        <link rel="stylesheet" href="/assets/styles.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-        <h1>TODO app</h1>
+        <div class="nav">
+            <h1>The TODO app</h1>
+            <div>
+                {{template "nav"}}
+            </div>
+        </div>
 {{end}}
 {{define "footer"}}
     </body>

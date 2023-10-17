@@ -1,11 +1,19 @@
 {{template "header"}}
-    <a href="/home">home</a>
-    <form method='POST'>
-        <label for="username">Username</label>
-        <input required autofocus placeholder="Username" type="text" name="username" > 
-        <label for="password">Password</label>
-        <input required placeholder="password" type="password" name="password"> 
-        <input type="submit"> 
-    </form>
-    Don't have an account? <a href="/register">Register here.</a>
+    <div class="auth-form">
+        <h2>Log In</h2>
+        <form method='POST'>
+            <label for="username">Username: </label>
+            <input required autofocus placeholder="Username" type="text" name="username" class="text"> 
+            <label for="password">Password: </label>
+            <input required placeholder="password" type="password" name="password" class="text"> 
+            <input type="submit"> 
+        </form>
+        <div>
+            Don't have an account? <a href="/register">Register here.</a>
+        </div>
+    </div>
 {{template "footer"}}
+
+{{define "nav"}}
+    <a href="/home">home</a>
+{{end}}

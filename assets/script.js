@@ -26,4 +26,3 @@ function register() {
     msg.innerText = ""
     button.disabled = false 
 };
-

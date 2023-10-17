@@ -1,13 +1,19 @@
 {{template "header"}}
-    <a href="/home">home</a>
-    <form method='POST' id="register" onsubmit="register()">
-        <label for="usernmae">Username</label>
-        <input required autofocus placeholder="Username" type="text" name="username"> 
-        <label for="password">Password</label>
-        <input required placeholder="password" type="password" name="password" id="password">
-        <label for="confirm">Confirm Password</label>
-        <input required placeholder="Confirm" type="password" name="confirm" id="confirm"> 
-        <p id="msg"></p>
-        <input type="submit" disabled=true id="button"> 
-    </form>
+    <div class="auth-form">
+        <h2>Sing In</h2>
+        <form method='POST' id="register" onsubmit="register()"> 
+            <label for="usernmae">Username: </label>
+            <input required autofocus placeholder="Username" type="text" name="username" class="text"> 
+            <label for="password">Password: </label>
+            <input required placeholder="password" type="password" name="password" id="password" class="text">
+            <label for="confirm">Confirm: </label>
+            <input required placeholder="Confirm" type="password" name="confirm" id="confirm" class="text"> 
+            <p id="msg"></p>
+            <input type="submit" disabled=true>
+        </form>
+    </div>
 {{template "footer"}}
+
+{{define "nav"}}
+    <a href="/home">home</a>
+{{end}}
