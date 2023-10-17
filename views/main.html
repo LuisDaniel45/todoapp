@@ -1,4 +1,8 @@
 {{template "header"}}
+    <a href="/logout">logout</a>
+    <a href="/home">home</a>
+{{template "nav-end"}}
+
     <div class="todo">
         <form method='POST'> 
             <input type="text" name="todo"> 
@@ -11,8 +15,3 @@
         </ul>
     </div>
 {{template "footer"}}
-
-{{define "nav"}}
-    <a href="/logout">logout</a>
-    <a href="/home">home</a>
-{{end}}

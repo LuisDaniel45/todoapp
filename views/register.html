@@ -1,4 +1,7 @@
 {{template "header"}}
+    <a href="/home">home</a>
+{{template "nav-end"}}
+
     <div class="auth-form">
         <h2>Sing In</h2>
         <form method='POST' id="register" onsubmit="register()"> 
@@ -13,7 +16,3 @@
         </form>
     </div>
 {{template "footer"}}
-
-{{define "nav"}}
-    <a href="/home">home</a>
-{{end}}
