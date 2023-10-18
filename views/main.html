@@ -5,13 +5,14 @@
 
     <div class="todo">
         <form method='POST'> 
+            <label for="todo">Add todo: </label>
             <input type="text" name="todo"> 
             <input type="submit"> 
         </form>
-        <ul> 
+        <div>
             {{range $var := .}}
-            <li>{{$var}}</li>
+            <p>{{$var}}</p>
             {{end}}
-        </ul>
+        </div>
     </div>
 {{template "footer"}}

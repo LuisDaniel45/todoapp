@@ -12,14 +12,15 @@ body {
     grid-column: 1 / calc(var(--size) + 1); 
     grid-row: 1;
     background-color: #00ff00;
-    height: calc((100vh / var(--size)) / 2.5); 
+    height: calc(100% / 2);
     display: grid;
     grid-template-columns: repeat(var(--size), calc(100vw / var(--size)));
 }
 
-.nav > h1 { 
-    grid-column: 3;
+.nav > h1 {
+    grid-column: calc(var(--size) / 2) / calc((var(--size) / 2) + 1.5);
     justify-self: center;
+    min-width: 270px;
 }
 
 .nav > div {
@@ -27,6 +28,7 @@ body {
     text-align: end;
     align-self: center;
     margin-right: 20%;
+    font-size: min(2.5vw, 100%);
 }
 
 .nav > div > a {
@@ -37,25 +39,34 @@ body {
     grid-column: 2 / 5;
     grid-row: 2 / 5;
     background-color: #47d1d1;
-    width: 66%;
-    margin-left: 16%;
-    justify-items: center;
-    align-items: center;
+    display: grid;
+    grid-template-rows:  repeat(5, calc(100%/5));
 }
 
 .todo > form {
-    padding-top: 10%;
-    padding-left: 25%;
+    grid-row: 1;
+    align-self: center;
+    text-align: center;
 }
 
-.todo > ul {
-    padding-left: 30%;
-    padding-top: 5%;
+.todo > div {
+    grid-row: 2 / 6;
+    overflow-y: auto;
+    background-color: #0000ff;
 }
+
+.todo > div > p {
+    background-color: #ff0000;
+    height: calc(100% / 7);
+    text-align: center;
+    padding-top: 1.1%;
+}
+
 
 .auth-form {
     grid-column: 2 / 5;
     grid-row: 2 / 5;
+    min-width: 300px;
     background-color: #47d1d1;
     display: grid;
     grid-template-rows:  repeat(3, calc(100% / 3));
@@ -94,9 +105,10 @@ body {
 }
 
 .auth-form > div {
-    grid-column: 2 / 3;
-    grid-row: 3; 
-    width: 125%;
-    padding-left: 25%;
+    grid-column: 1 / 4;
+    grid-row: 3;
+    text-align: center;
+    /* width: 125%; */
+    /* padding-left: 25%; */
     align-self: self-start;
 }
