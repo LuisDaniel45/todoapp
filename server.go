@@ -16,6 +16,11 @@ type err_values struct {
     Msg string
 }
 
+type task_t struct { 
+    Id int;
+    Task string;
+}
+
 var db *sql.DB;
 var t *template.Template;
 
@@ -24,6 +29,7 @@ func main()  {
     template_init();
     assets_init();
 
+    http.HandleFunc("/delete_task", delete_task); 
     http.HandleFunc("/logout", logout);
     http.HandleFunc("/home", home);
     http.HandleFunc("/register", register);
@@ -35,6 +41,57 @@ func main()  {
         println("ERROR: opening port");
         log.Fatal(err)
     }
+}
+
+func delete_task(w http.ResponseWriter, r *http.Request)  {
+    cookie, err := r.Cookie("auth");
+    if err != nil {
+        w.WriteHeader(401);
+        return
+    }
+
+    data := r.URL.Query()
+    if !data.Has("task") {
+        w.WriteHeader(400);
+        w.Write([]byte("Bad Request: not task key"));
+        return
+    }
+
+    id := data.Get("task");
+    if id == "" {
+        w.WriteHeader(400);
+        w.Write([]byte("Bad Request: not task value"));
+        return
+    }
+
+    row := db.QueryRow("SELECT user_id FROM sessions WHERE token = ?", cookie.Value); 
+    var user_id int;
+    row.Scan(&user_id)
+    if user_id < 1 {
+        w.WriteHeader(401);
+        return
+    }
+
+    res, err := db.Exec("DELETE FROM todo WHERE id = ? AND user_id = ?", id, user_id); 
+    if err != nil {
+        unexpected_err(w, err,
+        "ERROR: deleting task from user: %s and task: %s", id, user_id)
+        return
+    } 
+
+    ret, err := res.RowsAffected();
+    if err != nil {
+        unexpected_err(w, err,
+        "ERROR: checking affeted rows from user: %s and task: %s", id, user_id)
+        return
+    } else if ret < 1 {
+        w.WriteHeader(400)
+        w.Write([]byte("Task Not Found"))
+        return
+    }
+
+    w.WriteHeader(200)
+    w.Write([]byte("OK"))
 }
 
 func logout(w http.ResponseWriter, r *http.Request)  {
@@ -264,7 +321,7 @@ func root(w http.ResponseWriter, r *http.Request)  {
         }
     }
 
-    rows, err = db.Query("SELECT task FROM todo WHERE user_id = ?", user_id)
+    rows, err = db.Query("SELECT task, id FROM todo WHERE user_id = ?", user_id)
     if err != nil {
         unexpected_err(w, err, 
             "ERROR: getting tasks for user_id: %d", 
@@ -273,10 +330,10 @@ func root(w http.ResponseWriter, r *http.Request)  {
     }
     defer rows.Close()
 
-    var todos []string;
+    var todos []task_t;
     for rows.Next() {
-        var task string;
-        err = rows.Scan(&task);
+        var task task_t;
+        err = rows.Scan(&task.Task, &task.Id);
         if err != nil {
             unexpected_err(w, err, 
                 "ERROR: scanning tasks for user_id: %d", 

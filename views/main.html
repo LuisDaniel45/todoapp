@@ -6,12 +6,15 @@
     <div class="todo">
         <form method='POST'> 
             <label for="todo">Add todo: </label>
-            <input type="text" name="todo"> 
-            <input type="submit"> 
+            <input type="text" name="todo" oninput="todo_func(this)"> 
+            <input type="submit" disabled=true> 
         </form>
-        <div>
-            {{range $var := .}}
-            <p>{{$var}}</p>
+        <div> 
+            {{range $tmp, $var := .}}
+            <div>
+                <button type="button" value="{{$var.Id}}" onclick="todo_done(this)">done?</button>
+                <p>{{$var.Task}}<p>
+            </div>
             {{end}}
         </div>
     </div>

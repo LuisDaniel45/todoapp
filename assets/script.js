@@ -25,4 +25,25 @@ function register() {
     }
     msg.innerText = ""
     button.disabled = false 
-};
+}
+
+function todo_func(element) {
+    const button = document.querySelector("input[type='submit']");
+    if (element.value != "") {
+        button.disabled = false;
+        return;
+    }
+    button.disabled = true;
+}
+
+function todo_done(element) {
+    fetch("/delete_task?task=" + element.value)
+        .then((response) => {
+            if (response.status == 200) {
+                element.parentElement.remove();
+                console.log(response.body);
+                return
+            }
+            console.log("ERROR: Somthing Went Wrong");
+        })
+}
