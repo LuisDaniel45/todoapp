@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -29,6 +30,7 @@ func main()  {
     template_init();
     assets_init();
 
+    http.HandleFunc("/change_priority", change_priority);
     http.HandleFunc("/delete_task", delete_task); 
     http.HandleFunc("/logout", logout);
     http.HandleFunc("/home", home);
@@ -41,6 +43,73 @@ func main()  {
         println("ERROR: opening port");
         log.Fatal(err)
     }
+}
+
+func change_priority(w http.ResponseWriter, r *http.Request)  {
+    cookie, err := r.Cookie("auth");
+    if err != nil {
+        w.WriteHeader(401);
+        return
+    }
+
+    println("hello")
+    data := r.URL.Query()
+    if !data.Has("priority") || !data.Has("task") {
+        w.WriteHeader(400);
+        w.Write([]byte("Bad Request: not task key"));
+        return
+    }
+
+    id := data.Get("task");
+    priority := data.Get("priority");
+    if id == "" || priority == "" {
+        w.WriteHeader(400);
+        w.Write([]byte("Bad Request: not task value"));
+        return
+    }
+    println(id, priority)
+
+    // res, err := db.Exec(`UPDATE task_priority SET priority = priority + 1 WHERE task_id IN (
+    //                      SELECT id FROM todo WHERE user_id = (
+    //                      SELECT user_id FROM sessions WHERE token = ?) AND priority >= ? AND priority < (
+    //                      SELECT priority FROM task_priority WHERE task_id = ?);
+    //                      UPDATE task_priority SET priority = ? WHERE task_id = ?;`, cookie.Value, priority, id, priority, id);
+
+    res, err := db.Exec(`UPDATE task_priority SET priority = priority + 1 WHERE task_id IN (
+                         SELECT id FROM todo WHERE user_id = (
+                         SELECT user_id FROM sessions WHERE token = ?) AND priority >= ? AND priority < (
+                             SELECT priority FROM task_priority WHERE task_id = ?))`, cookie.Value, priority, id)
+    if err != nil {
+        unexpected_err(w, err, "ERROR: changing priority in db\n");
+        return
+    }
+
+    tmp, err := res.RowsAffected();
+    if err != nil {
+        w.WriteHeader(500)
+        return
+    } else if tmp < 1 {
+        w.WriteHeader(400)
+        return
+    }
+
+    res, err = db.Exec(`UPDATE task_priority SET priority = ? WHERE task_id = ?;`, priority, id);
+    if err != nil {
+        unexpected_err(w, err, "ERROR: changing priority in db\n");
+        return
+    }
+
+    tmp, err = res.RowsAffected();
+    if err != nil {
+        w.WriteHeader(500)
+        return
+    } else if tmp < 1 {
+        w.WriteHeader(400)
+        return
+    }
+
+    w.WriteHeader(200);
+    return
 }
 
 func delete_task(w http.ResponseWriter, r *http.Request)  {
@@ -64,25 +133,18 @@ func delete_task(w http.ResponseWriter, r *http.Request)  {
         return
     }
 
-    row := db.QueryRow("SELECT user_id FROM sessions WHERE token = ?", cookie.Value); 
-    var user_id int;
-    row.Scan(&user_id)
-    if user_id < 1 {
-        w.WriteHeader(401);
-        return
-    }
-
-    res, err := db.Exec("DELETE FROM todo WHERE id = ? AND user_id = ?", id, user_id); 
+    res, err := db.Exec(`DELETE FROM todo WHERE id = ? AND user_id = 
+                        (SELECT user_id FROM sessions WHERE token = ?)`, id, cookie.Value); 
     if err != nil {
         unexpected_err(w, err,
-        "ERROR: deleting task from user: %s and task: %s", id, user_id)
+        "ERROR: deleting task from user: %s and task: %s", cookie.Value, id)
         return
     } 
 
     ret, err := res.RowsAffected();
     if err != nil {
         unexpected_err(w, err,
-        "ERROR: checking affeted rows from user: %s and task: %s", id, user_id)
+        "ERROR: checking affeted rows from user: %s and task: %s", cookie.Value, id)
         return
     } else if ret < 1 {
         w.WriteHeader(400)
@@ -300,6 +362,8 @@ func root(w http.ResponseWriter, r *http.Request)  {
     rows.Scan(&user_id)
     rows.Close()
 
+    // TODO: remember to send 400 if todo doesn't exist
+    // also remember to change so respond with json 
     if r.Method == "POST" {
         r.ParseForm();
         if r.PostForm.Has("todo") {
@@ -311,17 +375,45 @@ func root(w http.ResponseWriter, r *http.Request)  {
                 return
             }
 
-            _, err := db.Exec("INSERT INTO todo(user_id, task) values(?, ?)", user_id, todo);
+            res, err := db.Exec("INSERT INTO todo(user_id, task) values(?, ?)", user_id, todo);
             if err != nil {
                 unexpected_err(w, err, 
                     "ERROR: inserting task to todo list for user_id: %d", 
                     user_id);
                 return
             }
-        }
+
+            id, err := res.LastInsertId()
+            if err != nil {
+                unexpected_err(w, err, 
+                    "ERROR: getting LastInsertId", 
+                    user_id);
+                return
+            }
+
+            // TODO: remember to change to one querry 
+            println(id)
+            res, err = db.Exec("INSERT INTO task_priority(task_id, priority) values(?, (SELECT MAX(priority) + 1 FROM task_priority WHERE task_id IN (SELECT id FROM todo WHERE user_id = ?)))",  id, user_id);
+            if err != nil {
+                unexpected_err(w, err, 
+                    "ERROR: inserting task to todo list for user_id: %d", 
+                    user_id);
+                return
+            }
+
+            w.Write([]byte(fmt.Sprintf("%d", id)))
+            return
+        } 
+        
+        w.WriteHeader(400)
+        w.Write([]byte("Bad Request"));
+        return
     }
 
-    rows, err = db.Query("SELECT task, id FROM todo WHERE user_id = ?", user_id)
+    rows, err = db.Query(`SELECT todo.task, todo.id
+                          FROM todo FULL OUTER JOIN task_priority 
+                          ON todo.id = task_priority.task_id WHERE todo.user_id = ?
+                          ORDER BY task_priority.priority`, user_id)
     if err != nil {
         unexpected_err(w, err, 
             "ERROR: getting tasks for user_id: %d", 
@@ -407,6 +499,13 @@ func db_init() {
             user_id INTEGER NOT NULL,
             task TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS task_priority(
+            id INTEGER PRIMARY KEY AUTOINCREMENT, 
+            task_id INTEGER,
+            priority INTEGER,
+            FOREIGN KEY (task_id) REFERENCES task(id)
         );
     `);
     if err != nil {

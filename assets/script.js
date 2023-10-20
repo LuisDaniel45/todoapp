@@ -1,3 +1,26 @@
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id)
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    const data = ev.dataTransfer.getData("text");
+    const list = document.querySelector(".todo > div"); 
+
+    const target = (ev.target.id === "") ? ev.target.parentElement: ev.target;
+    const elem = document.getElementById(data);
+
+    fetch("/change_priority?task=" + elem.querySelector('button').value + "&priority=" + target.id)
+        .then(res => console.log(res.status));
+
+    elem.id = target.id;
+    for (let i = target; i != elem; i = i.nextElementSibling) {
+        i.id++;
+    }
+
+    list.insertBefore(elem, target);
+}
+
 const confirm = document.getElementById("confirm")
 if (confirm != null) {
     confirm.addEventListener("input", register)
@@ -27,11 +50,52 @@ function register() {
     button.disabled = false 
 }
 
+const form = document.querySelector(".todo > form")
+if (form != null) {
+    form.addEventListener("submit", (ev) => {
+        ev.preventDefault()
+        const input = form.querySelector("input[type='text'");
+        const data = input.value;
+        const key = input.name;
+        input.value = ""
+
+        fetch("/", {
+            method: "POST",
+            mode: "cors",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: key + "=" + data
+        })
+        .then((response) =>  {
+            if (response.ok) {
+                return response.text()
+            }
+        })
+        .then(task_index => {
+            const todo_list = form.parentElement.querySelector("div");
+            const container = document.createElement("div")
+
+            const button = document.createElement("button");
+            button.type = "button";
+            button.value= task_index;
+            button.innerHTML = "done?";
+            button.onclick = () => {todo_done(button)};
+
+            const text = document.createElement("p");
+            text.innerHTML = data;
+
+            container.appendChild(button);
+            container.appendChild(text);
+            todo_list.appendChild(container);
+        });
+    });
+}
+
 function todo_func(element) {
     const button = document.querySelector("input[type='submit']");
     if (element.value != "") {
-        button.disabled = false;
-        return;
+        button.disabled = false; return;
     }
     button.disabled = true;
 }
@@ -41,7 +105,6 @@ function todo_done(element) {
         .then((response) => {
             if (response.status == 200) {
                 element.parentElement.remove();
-                console.log(response.body);
                 return
             }
             console.log("ERROR: Somthing Went Wrong");
