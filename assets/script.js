@@ -11,7 +11,8 @@ function drop(ev) {
     const elem = document.getElementById(data);
 
     fetch("/change_priority?task=" + elem.querySelector('button').value + "&priority=" + target.id)
-        .then(res => console.log(res.status));
+        .then(res => res.text())
+        .then(bod => console.log(bod));
 
     elem.id = target.id;
     for (let i = target; i != elem; i = i.nextElementSibling) {
@@ -35,7 +36,7 @@ function register() {
     const conf = confirm.value
     const pass =  document.getElementById("password").value
     const msg = document.getElementById("msg")
-    const button = document.getElementById("button")
+    const button = document.querySelector("#register > input[type='submit']")
     if (conf == "" || pass == "") {
         msg.innerText = "Missing password or confirmation"
         button.disabled = true
@@ -58,7 +59,6 @@ if (form != null) {
         const data = input.value;
         const key = input.name;
         input.value = ""
-
         fetch("/", {
             method: "POST",
             mode: "cors",
