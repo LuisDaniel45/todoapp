@@ -7,18 +7,26 @@ function drop(ev) {
     const data = ev.dataTransfer.getData("text");
     const list = document.querySelector(".todo > div"); 
 
+
     const target = (ev.target.id === "") ? ev.target.parentElement: ev.target;
     const elem = document.getElementById(data);
-
-    fetch("/change_priority?task=" + elem.querySelector('button').value + "&priority=" + target.id)
+    fetch("/change_priority?task=" + elem.querySelector('button').value +
+          "&priority=" + target.id + "&direction=" + ((data > target.id)? "up": "down"))
         .then(res => res.text())
         .then(bod => console.log(bod));
 
     elem.id = target.id;
+    if (data < target.id)  {
+        for (let i = elem.nextElementSibling; i != target.nextElementSibling; i = i.nextElementSibling) {
+            i.id--;
+        }
+        list.insertBefore(elem, target.nextElementSibling);
+        return;
+    }
+
     for (let i = target; i != elem; i = i.nextElementSibling) {
         i.id++;
     }
-
     list.insertBefore(elem, target);
 }
 
