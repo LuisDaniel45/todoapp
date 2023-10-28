@@ -131,7 +131,7 @@ func delete_task(w http.ResponseWriter, r *http.Request)  {
         return
     }
 
-    res, err := db.Exec(`UPDATE task_priority SET priority = priority - 1 
+    _, err = db.Exec(`UPDATE task_priority SET priority = priority - 1 
                         WHERE task_id IN ( 
                         SELECT id from todo WHERE user_id = (
                         SELECT user_id FROM sessions WHERE token = ?)) AND priority > (
@@ -142,18 +142,8 @@ func delete_task(w http.ResponseWriter, r *http.Request)  {
         return
     } 
 
-    ret, err := res.RowsAffected();
-    if err != nil {
-        unexpected_err(w, err,
-        "ERROR: checking affeted rows from user: %s and task: %s", cookie.Value, id)
-        return
-    } else if ret < 1 {
-        w.WriteHeader(400)
-        w.Write([]byte("Task Not Found"))
-        return
-    }
 
-    res, err = db.Exec(`DELETE FROM todo WHERE id = ? AND user_id = 
+    res, err := db.Exec(`DELETE FROM todo WHERE id = ? AND user_id = 
                         (SELECT user_id FROM sessions WHERE token = ?)`, 
                         id, cookie.Value); 
     if err != nil {
@@ -162,7 +152,7 @@ func delete_task(w http.ResponseWriter, r *http.Request)  {
         return
     } 
 
-    ret, err = res.RowsAffected();
+    ret, err := res.RowsAffected();
     if err != nil {
         unexpected_err(w, err,
         "ERROR: checking affeted rows from user: %s and task: %s", cookie.Value, id)

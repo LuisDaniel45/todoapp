@@ -1,15 +1,18 @@
 function drag(ev) {
     ev.dataTransfer.setData("text", ev.target.id)
+    ev.target.addEventListener("drag", (ev) => {
+    });
 }
 
 function drop(ev) {
-    ev.preventDefault();
+    // ev.preventDefault();
     const data = ev.dataTransfer.getData("text");
     const list = document.querySelector(".todo > div"); 
 
-
     const target = (ev.target.id === "") ? ev.target.parentElement: ev.target;
     const elem = document.getElementById(data);
+    if (target == elem) {return}
+
     fetch("/change_priority?task=" + elem.querySelector('button').value +
           "&priority=" + target.id + "&direction=" + ((data > target.id)? "up": "down"))
         .then(res => res.text())

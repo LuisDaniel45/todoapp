@@ -55,6 +55,7 @@ body {
     grid-row: 2 / 6;
     overflow-y: auto;
     background-color: #0000ff;
+    user-select: none;
 }
 
 .todo > div > div {
