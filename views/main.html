@@ -11,8 +11,7 @@
         </form>
         <div> 
             {{range $tmp, $var := .}}
-            <div ondrop="drop(event)" ondragover="event.preventDefault()" 
-                draggable="true" ondragstart="drag(event)" id="{{$tmp}}">
+            <div class="draggable" id="{{$tmp}}">
                 <button type="button" value="{{$var.Id}}" onclick="todo_done(this)">done?</button>
                 <p>{{$var.Task}}</p>
             </div>

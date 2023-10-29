@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -35,6 +36,7 @@ func main()  {
     http.HandleFunc("/login", login);
     http.HandleFunc("/", root);
 
+    log.Println("Server started");
     err := http.ListenAndServe(":8080", nil);
     if err != nil {
         println("ERROR: opening port");
