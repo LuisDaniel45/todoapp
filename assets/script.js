@@ -72,10 +72,11 @@ function drag(elem, container, targets) {
             return
         }
 
-        targets.forEach((target) => {
-            if (target == elem) return
+        for (let i = 0; i < targets.length; i++) {
+            const target = targets[i];
+            if (target == elem) continue 
             const rect = target.getBoundingClientRect();
-            if (!collide(elem_r, rect)) return
+            if (!collide(elem_r, rect)) continue 
 
             if (empty.y > rect.y) {
                 console.log("go up")
@@ -88,7 +89,8 @@ function drag(elem, container, targets) {
             const y = (target.style.top == "60px")? "0px": "-60px";
             transition(target, y, anim_speed)
             empty = rect;
-        })
+            return
+        }
 
     }
 
@@ -104,47 +106,52 @@ function drag(elem, container, targets) {
             return
         }
 
-        empty.y -= empty.height;
-        const elem_id = elem.id;
+        const el_r = elem.getBoundingClientRect();
+        const elem_id = Number(elem.id);
+        var change = false;
         targets.forEach((target) => {
-            const rect = target.getBoundingClientRect();
-            if (collide(empty, rect) && target != elem) {
-                console.log("times")
-                elem.id = target.id;
-                if (elem_id < target.id)  {
-                    console.log("down", "priority", target.id)
-                    fetch("/change_priority?task=" + 
-                        elem.querySelector('button').value +
-                        "&priority=" + target.id + "&direction=down" )
-                        .then(res => res.text())
-                        .then(bod => console.log(bod));
-
-                    for (let i = elem.nextElementSibling; 
-                        i != target.nextElementSibling; 
-                        i = i.nextElementSibling) {
-                        i.id--;
-                    }
-                    container.insertBefore(elem, target.nextElementSibling)
-                }
-                else  {
-                    const next = (target.nextElementSibling == null)? 
-                                        target: target.nextElementSibling;
-                    fetch("/change_priority?task=" + 
-                        elem.querySelector('button').value +
-                        "&priority=" + next.id + "&direction=up") 
-                        .then(res => res.text())
-                        .then(bod => console.log(bod));
-                    for (let i = target; i != elem;  i = i.nextElementSibling) {
-                        i.id++;
-                    }
-                    container.insertBefore(elem, next) 
-                }
-            }
             target.style.top = ""
             target.style.position = ""
+
+            const rect = target.getBoundingClientRect();
+            if (!(collide(el_r, rect) && target != elem) || change) return;
+            change = true 
+
+            elem.id = target.id;
+            if (elem_id < Number(target.id))  {
+                console.log(elem_id, "down", "priority", target.id) 
+                fetch("/change_priority?task=" +
+                    elem.querySelector('button').value +
+                    "&priority=" + target.id + "&direction=down" )
+                    .then(res => res.text())
+                    .then(bod => console.log(bod));
+
+                for (let i = elem.nextElementSibling;
+                    i != target.nextElementSibling; 
+                    i = i.nextElementSibling) {
+                    i.id = Number(i.id) - 1;
+                }
+                container.insertBefore(elem, target.nextElementSibling);
+                return
+            }
+
+            console.log(elem_id, "up", "priority", target.id)
+            fetch("/change_priority?task=" +
+                elem.querySelector('button').value +
+                "&priority=" + target.id + "&direction=up")
+                .then(res => res.text())
+                .then(bod => console.log(bod));
+
+            for (let i = target; 
+                i != elem;
+                i = i.nextElementSibling) {
+                i.id = Number(i.id) + 1;
+            }
+            container.insertBefore(elem, target); 
         })
     }
 }
+
 
 function collide(a, b) {
     return (b.x < a.x + a.width &&
@@ -235,7 +242,14 @@ function todo_done(element) {
     fetch("/delete_task?task=" + element.value)
         .then((response) => {
             if (response.status == 200) {
-                element.parentElement.remove();
+                const parent = element.parentElement;
+                const next = parent.nextElementSibling;
+                parent.remove()
+                for (let i = next; i != null; i = i.nextElementSibling) {
+                    i.style.position = "relative"
+                    i.style.top = "60px"
+                    transition(i, "0px", 500)
+                }
                 return
             }
             console.log("ERROR: Somthing Went Wrong");

@@ -1,5 +1,4 @@
 package main
-
 import ( 
     "log"
 	"net/http"
@@ -30,6 +29,7 @@ func change_priority(w http.ResponseWriter, r *http.Request)  {
     }
 
     if direction == "down" {
+        log.Printf("user token %s: requests lowering task %s to priority %s", cookie, id, priority)
         res, err := db.Exec(`UPDATE task_priority SET priority = priority - 1 WHERE task_id IN (
                              SELECT id FROM todo WHERE user_id = 
                              (SELECT user_id FROM sessions WHERE token = ?)) 
@@ -70,6 +70,7 @@ func change_priority(w http.ResponseWriter, r *http.Request)  {
         return
     }
 
+    log.Printf("user token %s: requests upping task %s to priority %s", cookie, id, priority)
 
     res, err := db.Exec(`UPDATE task_priority SET priority = priority + 1 WHERE task_id IN (
                          SELECT id FROM todo WHERE user_id = (
