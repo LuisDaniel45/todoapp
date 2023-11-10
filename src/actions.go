@@ -30,11 +30,17 @@ func change_priority(w http.ResponseWriter, r *http.Request)  {
 
     if direction == "down" {
         log.Printf("user token %s: requests lowering task %s to priority %s", cookie, id, priority)
-        res, err := db.Exec(`UPDATE task_priority SET priority = priority - 1 WHERE task_id IN (
-                             SELECT id FROM todo WHERE user_id = 
-                             (SELECT user_id FROM sessions WHERE token = ?)) 
+        res, err := db.Exec(`UPDATE task_priority SET 
+                             priority = CASE
+                                           WHEN task_id = ? THEN ?
+                                           ELSE priority - 1
+                                        END
+                             WHERE task_id IN (
+                             SELECT id FROM todo WHERE user_id =
+                             (SELECT user_id FROM sessions WHERE token = ?))
                              AND priority <= ? AND priority >= (
-                             SELECT priority FROM task_priority WHERE task_id = ?)`, cookie.Value, priority, id)
+                             SELECT priority FROM task_priority WHERE task_id = ?)`, 
+                             id, priority, cookie.Value, priority, id)
         if err != nil {
             unexpected_err(w, err, "ERROR: changing priority in db\n");
             return
@@ -46,36 +52,25 @@ func change_priority(w http.ResponseWriter, r *http.Request)  {
             return
         } else if tmp < 1 {
             w.WriteHeader(400)
-            w.Write([]byte("Bad Request: first"));
-            return
-        }
-
-        res, err = db.Exec(`UPDATE task_priority SET priority = ? WHERE task_id = ?;`, priority, id);
-        if err != nil {
-            unexpected_err(w, err, "ERROR: changing priority in db\n");
-            return
-        }
-
-        tmp, err = res.RowsAffected();
-        if err != nil {
-            w.WriteHeader(500)
-            return
-        } else if tmp < 1 {
-            w.WriteHeader(400)
-            w.Write([]byte("Bad Request: second"));
             return
         }
 
         w.WriteHeader(200);
         return
     }
-
     log.Printf("user token %s: requests upping task %s to priority %s", cookie, id, priority)
 
-    res, err := db.Exec(`UPDATE task_priority SET priority = priority + 1 WHERE task_id IN (
+    res, err := db.Exec(`UPDATE task_priority SET 
+                         priority = CASE 
+                                        WHEN task_id = ? THEN ?
+                                        ELSE priority + 1
+                                    END
+                         WHERE task_id IN (
                          SELECT id FROM todo WHERE user_id = (
-                         SELECT user_id FROM sessions WHERE token = ?) AND priority >= ? AND priority < (
-                         SELECT priority FROM task_priority WHERE task_id = ?))`, cookie.Value, priority, id)
+                         SELECT user_id FROM sessions WHERE token = ?) 
+                         AND priority >= ? AND priority <= (
+                         SELECT priority FROM task_priority WHERE task_id = ?))`, 
+                         id, priority, cookie.Value, priority, id)
     if err != nil {
         unexpected_err(w, err, "ERROR: changing priority in db\n");
         return
@@ -87,23 +82,6 @@ func change_priority(w http.ResponseWriter, r *http.Request)  {
         return
     } else if tmp < 1 {
         w.WriteHeader(400)
-        w.Write([]byte("Bad Request: first"));
-        return
-    }
-
-    res, err = db.Exec(`UPDATE task_priority SET priority = ? WHERE task_id = ?;`, priority, id);
-    if err != nil {
-        unexpected_err(w, err, "ERROR: changing priority in db\n");
-        return
-    }
-
-    tmp, err = res.RowsAffected();
-    if err != nil {
-        w.WriteHeader(500)
-        return
-    } else if tmp < 1 {
-        w.WriteHeader(400)
-        w.Write([]byte("Bad Request: second"));
         return
     }
 

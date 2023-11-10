@@ -5,14 +5,56 @@
 body {
     display: grid;
     grid-template-rows:  repeat(var(--size), calc(100vh / var(--size)));
+    background-image: linear-gradient(black, #612202);
+}
+
+.home-text {
+    grid-row: 4;
+    width: 40vw;
+    margin-top: 20vh;
+    padding-bottom: 5vh;
+    background-color: #27213C;
+    justify-self: center;
+    align-self: center;
+    color: white;
+    border-radius: 12px;
+}
+
+.home-text > h2 {
+    text-align: center;
+}
+
+.home-text > p {
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+#bg-main-image {
+    justify-self: center;
+    width: 90vw;
+    height: 50vh;
+    padding: 2px;
+    border-radius: 10px;
+    background-color: #C9F0FF;
+    position: relative;
+    top: -40%;
+}
+
+#bg-main-image > img {
+    width: 90vw;
+    height: 50vh;
+    border-radius: 12px;
 }
 
 .nav {
     grid-row: 1;
-    background-color: #00ff00;
+    background-color: #12355B;
     height: calc(100% / 2);
     display: grid;
     grid-template-columns: repeat(3, calc(100vw / 3));
+    position: relative;
+    top: -10px;
+    left: -10px;
 }
 
 .nav > h1 {
@@ -21,6 +63,7 @@ body {
     text-align: center;
     align-self: center;
     font-size: min(4vw, 250%);
+    color: #ADB4BF;
 }
 
 .nav > div {
@@ -37,12 +80,28 @@ body {
 
 .todo {
     max-width: 80vw;
-    min-width: 30%;
+    min-width: 50%;
     justify-self: center;
     grid-row: 2 / 5;
-    background-color: #47d1d1;
+    background-image: linear-gradient(#0f4c81, black);
+    color: white;
     display: grid;
     grid-template-rows:  repeat(5, calc(100%/5));
+    border-radius: 12px;
+}
+
+.todo > form > input{
+    /* background-color: #008080; */
+    background-color: #DCD0FF;
+    width: 50%;
+    border-radius: 12px;
+}
+.todo > form > input[type='submit'] {
+    background-color: black;
+    color: white;
+    width: 25%;
+    margin-left: 5%;
+    border-radius: 12px;
 }
 
 .todo > form {
@@ -54,17 +113,36 @@ body {
 .todo > div {
     grid-row: 2 / 6;
     overflow-y: auto;
-    background-color: #0000ff;
     user-select: none;
+    border-radius: 12px;
+    background-color: #ffffff32; 
+    padding-top: 3%;
+    margin: 3%;
+}
+
+.todo > div > div > button {
+    width: 75%;
+    height: 75%;
+    justify-self: center;
+    align-self: center;
+    background-color: #615D6C;
+    color: white;
+    border-radius: 12px;
+    border-color: #94BFA7;
 }
 
 .todo > div > div {
-    background-color: #ff0000;
-    /* height: 100%; */
+    background-color: #990d35;
     text-align: center;
     display: grid;
     grid-template-columns:  25% 75%;
     margin-bottom: 3%;
+    border-radius: 12px;
+    margin-left: 3%;
+    margin-right: 3%;
+}
+a {
+    color: #00FFFF;
 }
 
 
@@ -72,7 +150,8 @@ body {
     justify-self: center;
     min-width: 50%;
     grid-row: 2 / 5;
-    background-color: #47d1d1;
+    color: #94BFA7;
+    background-image: linear-gradient(black, #12355B);
     display: grid;
     grid-template-rows:  repeat(3, calc(100% / 3));
     grid-template-columns: repeat(3, calc(100% / 3));
@@ -109,7 +188,13 @@ body {
     grid-column: 2 / 4;
 }
 
+.auth-form > form > input {
+    background-color: #C9F0FF;
+}
+
 .auth-form > form > input[type="submit"] {
+    background-color: black;
+    color: white;
     grid-column: 2 / 4;
     width: 75%;
     margin-left: 25%;

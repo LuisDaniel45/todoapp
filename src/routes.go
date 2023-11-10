@@ -134,6 +134,7 @@ func login(w http.ResponseWriter, r *http.Request)  {
 }
 
 func root(w http.ResponseWriter, r *http.Request)  {
+    log.Println("Request to root")
     if r.URL.Path != "/" {
         w.WriteHeader(404)
         err := t.ExecuteTemplate(w, "error.html", err_values{404, "Not Found"})

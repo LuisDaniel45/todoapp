@@ -35,6 +35,7 @@ function transition(obj, y, speed) {
 function drag(elem, container, targets) { 
     elem.style.userSelect = "none";
     const anim_speed = 500;
+    var timer = undefined;
     var empty; 
     var off_x; 
     var off_y;
@@ -43,8 +44,9 @@ function drag(elem, container, targets) {
     elem.addEventListener("touchstart", start);
 
     function start(e) {
-        e.preventDefault()
+        // e.preventDefault()
         elem.style.position = "relative";
+        console.log(e);
         empty = elem.getBoundingClientRect()
 
         if (e.type == "mousedown") {
@@ -52,13 +54,15 @@ function drag(elem, container, targets) {
             off_y = e.clientY;
             document.addEventListener("mousemove", move);
             document.addEventListener("mouseup", stop);
-            return 
-        } 
+            return
+        }
 
         const evt = e.touches[0];
-        off_x = evt.clientX; 
+        off_x = evt.clientX;
         off_y = evt.clientY;
-        document.addEventListener("touchmove", move);
+        timer = setTimeout(() => {
+            document.addEventListener("touchmove", move)
+        document.style.backgroundColor = "#00ff00"}, 1000);
         document.addEventListener("touchend", stop);
     }
 
@@ -95,6 +99,9 @@ function drag(elem, container, targets) {
     }
 
     function stop(e) {
+        if (timer != undefined)
+            clearTimeout(timer);
+
         const move_ev = (e.type == 'mouseup')? "mousemove": "touchmove";
         document.removeEventListener(move_ev, move);
         document.removeEventListener(e.type, stop);

@@ -5,9 +5,8 @@
 
     <div class="todo">
         <form method='POST'> 
-            <label for="todo">Add todo: </label>
             <input type="text" name="todo" oninput="todo_func(this)"> 
-            <input type="submit" disabled=true> 
+            <input type="submit" value="Add Todo" disabled=true> 
         </form>
         <div> 
             {{range $tmp, $var := .}}
