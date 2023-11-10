@@ -1,8 +1,10 @@
 package main
-import ( 
-    "log"
+
+import (
+	"database/sql"
+	"log"
 	"net/http"
-    "time"
+	"time"
 )
 
 func change_priority(w http.ResponseWriter, r *http.Request)  {
@@ -28,9 +30,9 @@ func change_priority(w http.ResponseWriter, r *http.Request)  {
         return
     }
 
+    var res sql.Result
     if direction == "down" {
-        log.Printf("user token %s: requests lowering task %s to priority %s", cookie, id, priority)
-        res, err := db.Exec(`UPDATE task_priority SET 
+        res, err = db.Exec(`UPDATE task_priority SET 
                              priority = CASE
                                            WHEN task_id = ? THEN ?
                                            ELSE priority - 1
@@ -41,36 +43,19 @@ func change_priority(w http.ResponseWriter, r *http.Request)  {
                              AND priority <= ? AND priority >= (
                              SELECT priority FROM task_priority WHERE task_id = ?)`, 
                              id, priority, cookie.Value, priority, id)
-        if err != nil {
-            unexpected_err(w, err, "ERROR: changing priority in db\n");
-            return
-        }
-
-        tmp, err := res.RowsAffected();
-        if err != nil {
-            w.WriteHeader(500)
-            return
-        } else if tmp < 1 {
-            w.WriteHeader(400)
-            return
-        }
-
-        w.WriteHeader(200);
-        return
+    } else {
+        res, err = db.Exec(`UPDATE task_priority SET 
+                             priority = CASE 
+                                            WHEN task_id = ? THEN ?
+                                            ELSE priority + 1
+                                        END
+                             WHERE task_id IN (
+                             SELECT id FROM todo WHERE user_id = (
+                             SELECT user_id FROM sessions WHERE token = ?) 
+                             AND priority >= ? AND priority <= (
+                             SELECT priority FROM task_priority WHERE task_id = ?))`, 
+                             id, priority, cookie.Value, priority, id)
     }
-    log.Printf("user token %s: requests upping task %s to priority %s", cookie, id, priority)
-
-    res, err := db.Exec(`UPDATE task_priority SET 
-                         priority = CASE 
-                                        WHEN task_id = ? THEN ?
-                                        ELSE priority + 1
-                                    END
-                         WHERE task_id IN (
-                         SELECT id FROM todo WHERE user_id = (
-                         SELECT user_id FROM sessions WHERE token = ?) 
-                         AND priority >= ? AND priority <= (
-                         SELECT priority FROM task_priority WHERE task_id = ?))`, 
-                         id, priority, cookie.Value, priority, id)
     if err != nil {
         unexpected_err(w, err, "ERROR: changing priority in db\n");
         return
